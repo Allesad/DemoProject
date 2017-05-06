@@ -8,7 +8,7 @@ namespace YumaPos.Core.Tests
         [Fact]
         public void CheckTest()
         {
-            Assert.Equal("It works!11", Sample.Ping());
+            Assert.Equal("It works!", Sample.Ping());
         }
     }
 }
