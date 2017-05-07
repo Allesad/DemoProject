@@ -10,7 +10,20 @@ var configuration = Argument("configuration", "Release");
 ///////////////////////////////////////////////////////////////////////////
 // BUILD VARIABLES
 ///////////////////////////////////////////////////////////////////////////
+var artifactsDir = Directory("./artifacts");
 
+var preReleaseSuffix = 
+    HasArgument("PreReleaseSuffix") ? Argument<string>("PreReleaseSuffix") :
+    (AppVeyor.IsRunningOnAppVeyor && AppVeyor.Environment.Repository.Tag.IsTag) ? null : 
+    EnvironmentVariable("PreReleaseSuffix") != null ? EnvironmentVariable("PreReleaseSuffx") :
+    "beta";
+
+var buildNumber = 
+    HasArgument("BuildNumber") ? Argument<int>("BuildNumber") :
+    AppVeyor.IsRunningOnAppVeyor ? AppVeyor.Environment.Build.Number :
+    TravisCI.IsRunningOnTravisCI ? TravisCI.Environment.Build.BuildNumber :
+    EnvironmentVariable("BuildNumber") != null ? int.Parse(EnvironmentVariable("BuildNumber")) :
+    0;
 
 ///////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -73,7 +86,27 @@ Task("Run-Unit-Tests")
     }
 });
 
+Task("Pack")
+    .IsDependentOn("Run-Unit-Tests")
+    .Does(() =>
+{
+    string versionSuffix = null;
+    if (!string.IsNullOrEmpty(preReleaseSuffix))
+    {
+        versionSuffix = preReleaseSuffix + "-" + buildNumber.ToString("D4");
+    }
+    foreach (var project in GetFiles("./src/**/*.csproj"))
+    {
+        DotNetCorePack(project.FullPath, new DotNetCorePackSettings
+        {
+            Configuration = configuration,
+            OutputDirectory = artifactsDir,
+            VersionSuffix = versionSuffix
+        });
+    }
+});
+
 Task("Default")
-    .IsDependentOn("Run-Unit-Tests");
+    .IsDependentOn("Pack");
 
 RunTarget(target);
