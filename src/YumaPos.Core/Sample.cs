@@ -6,7 +6,7 @@ namespace YumaPos.Core
     {
         public static string Ping()
         {
-            return "It works!11";
+            return "It works!";
         }
     }
 }
