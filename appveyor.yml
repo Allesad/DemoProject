@@ -13,4 +13,8 @@ environment:
 build_script:
 - ps: .\build.ps1
 
+artifacts:
+- path: artifacts/*
+- path: 'src/**/bin/*'
+
 test: off
